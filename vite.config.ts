@@ -14,11 +14,23 @@ export default defineConfig(function ({ command, mode }) {
 		server: {
 			open: true,
 		},
+		css: {
+			modules: {
+				localsConvention: "dashes",
+			},
+			preprocessorOptions: {
+				sass: {
+					api: "modern-compiler",
+				},
+			},
+			devSourcemap: true,
+		},
 		plugins: [vue()],
 		resolve: {
 			alias: {
 				"@": fileURLToPath(new URL("./src", import.meta.url)),
 			},
 		},
+		logLevel: "error",
 	};
 });

@@ -1,0 +1,41 @@
+@use "./_variables" as *
+html
+	min-height: 100vh
+
+body
+	min-height: 100vh
+	position: relative
+	color: $main-text-color
+	font-size: 2rem
+
+#app
+	max-width: 96rem
+	width: 92%
+	position: absolute
+	top: 50%
+	left: 50%
+	transform: translate(-50%, -50%)
+	border: 1px solid #000
+
+.container 
+	max-width: 100%
+	margin: 0 auto
+
+	@media (min-width: $sm)
+		max-width: 95%
+	@media (min-width: $md)
+		max-width: 85%
+	@media (min-width: $lg)
+		max-width: 78%
+
+button
+	display: block
+	border: none
+	font-family: Roboto
+	font-size: 0.6em
+	padding: 1.2rem 1.4rem
+	&:hover
+		cursor: pointer
+
+li
+	list-style: none
