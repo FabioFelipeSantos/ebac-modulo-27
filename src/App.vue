@@ -1,77 +1,107 @@
 <script setup lang="ts">
-const numbers: number[] = [7, 8, 9, 4, 5, 6, 1, 2, 3];
-const zeros: string[] = ["000", "00"];
-const zero: number = 0;
+import { reactive } from "vue";
+import MainScreen from "./components/MainScreen.vue";
+import NumbersButtons from "./components/NumbersButtons.vue";
+import OperatorsButtons from "./components/OperatorsButtons.vue";
 
-type Operation = {
-	operation: string;
-	style: "gray gray-green" | "gray gray-red" | "gray gray-white" | "green-white";
+type States = {
+	enteredCalculation: string[];
+	listOfPastCalculations: string[];
 };
 
-const operators: Operation[] = [
-	{
-		operation: "+",
-		style: "gray gray-green",
-	},
-	{
-		operation: "×",
-		style: "gray gray-green",
-	},
-	{
-		operation: "–",
-		style: "gray gray-green",
-	},
-	{
-		operation: "÷",
-		style: "gray gray-green",
-	},
-];
-const specialOperators: Operation[] = [
-	{
-		operation: "%",
-		style: "gray gray-green",
-	},
-	{
-		operation: "()",
-		style: "gray gray-green",
-	},
-	{
-		operation: "C",
-		style: "gray gray-red",
-	},
-	{
-		operation: "CE",
-		style: "gray gray-red",
-	},
-];
-const others: Operation[] = [
-	{
-		operation: ",",
-		style: "gray gray-white",
-	},
-	{
-		operation: "=",
-		style: "green-white",
-	},
-	{
-		operation: "+/-",
-		style: "gray gray-white",
-	},
-];
+const states: States = reactive({
+	enteredCalculation: [""],
+	listOfPastCalculations: [
+		"1 + 2",
+		"2 - 5",
+		"1 + 2",
+		"2 - 5",
+		"1 + 2",
+		"2 - 5",
+		"1 + 2",
+		"2 - 5",
+		"1 + 2",
+		"2 - 5",
+		"1 + 2",
+		"2 - 5",
+		"1 + 2",
+		"2 - 5",
+		"1 + 2",
+		"2 - 5",
+	],
+});
 
-function addingSpecificClassToButton(operator: Operation): string {
-	switch (operator.operation) {
-		case ",": {
-			return `${operator.style} ${operator.style}--1`;
+function handleClickingOnPastComputation(value: string): void {
+	states.enteredCalculation = [];
+	states.enteredCalculation.push(value);
+	console.log("enteredCalculation: ", states.enteredCalculation);
+}
+
+function handleEnteringNumbers(pressedButton: string) {
+	const lastEnteredItem = states.enteredCalculation[states.enteredCalculation.length - 1];
+	const convertedItem: number = Number(lastEnteredItem);
+	if (lastEnteredItem === "") {
+		states.enteredCalculation[states.enteredCalculation.length - 1] = pressedButton;
+	} else if (!Number.isNaN(convertedItem)) {
+		states.enteredCalculation.pop();
+		states.enteredCalculation.push(lastEnteredItem + pressedButton);
+	} else {
+		states.enteredCalculation.push(pressedButton);
+	}
+	//
+	console.log("Number entered: ", states.enteredCalculation);
+}
+
+function handleOperation(operation: string): void {
+	const [lastEnteredItem] = states.enteredCalculation[states.enteredCalculation.length - 1];
+	const mathOperations: string[] = ["+", "-", "*", "/"];
+	if (mathOperations.includes(operation)) {
+		if (lastEnteredItem === "") {
+			states.enteredCalculation[states.enteredCalculation.length - 1] = operation;
+			return;
+		} else {
+			states.enteredCalculation.push(operation);
+			states.enteredCalculation.push("");
+			return;
 		}
-		case "=": {
-			return `${operator.style} ${operator.style}--2`;
-		}
-		case "+/-": {
-			return `${operator.style} ${operator.style}--3`;
-		}
-		default: {
-			return `${operator.style}`;
+	}
+
+	switch (operation) {
+		case "%": {
+			// [ [-3] "123", [-2] "+ or - or *", [-1] "25" ] and then we pressed %
+			try {
+				const numberToCalculatePercentage = Number(
+					states.enteredCalculation[states.enteredCalculation.length - 3],
+				);
+
+				if (Number.isNaN(numberToCalculatePercentage)) {
+					throw new Error(
+						"Você precisa ter entrado um número válido antes do sinal logo antes do valor a ser calculado a porcentagem.\n\nExemplo: 100 + 25%\n\nAqui queremos somar 25% de 100 ao próprio 100, cujo resultado será 125!",
+					);
+				} else {
+					const beforeOperation = states.enteredCalculation[states.enteredCalculation.length - 2];
+
+					const percentage = states.enteredCalculation[states.enteredCalculation.length - 1];
+
+					let multiplyBy;
+
+					if (beforeOperation === "+" || beforeOperation === "-") {
+						multiplyBy = eval(`1 + ${beforeOperation} + (${percentage} / 100)`);
+					} else if (beforeOperation === "*") {
+						multiplyBy = eval(`${percentage} / 100`);
+					} else {
+						multiplyBy = eval(`1 / (${percentage} / 100 )`);
+					}
+
+					states.enteredCalculation.splice(
+						-3,
+						3,
+						(numberToCalculatePercentage * multiplyBy).toString(),
+					);
+				}
+			} catch (error) {
+				alert(error);
+			}
 		}
 	}
 }
@@ -79,146 +109,20 @@ function addingSpecificClassToButton(operator: Operation): string {
 
 <template>
 	<div class="calc__bg container">
-		<div class="calc__screen">
-			<div class="calc__screen__main">
-				<div class="calc__screen__result">123456789</div>
-			</div>
-			<div class="calc__screen__second bdr-b">
-				<div class="calc__screen__list">123456789</div>
-			</div>
-		</div>
+		<MainScreen
+			:result="states.enteredCalculation"
+			:list="states.listOfPastCalculations"
+			:handleListClick="handleClickingOnPastComputation" />
 
-		<div class="calc__numbers">
-			<div class="calc__numbers__ctn">
-				<div class="calc__list">
-					<button
-						v-for="num in numbers"
-						:key="num"
-						class="calc__list__button"
-						type="button">
-						{{ num }}
-					</button>
-				</div>
+		<NumbersButtons :handleEnteredValue="handleEnteringNumbers" />
 
-				<div class="calc__zeros">
-					<button
-						v-for="zero in zeros"
-						:key="zero"
-						class="calc__zeros__two-three"
-						type="button">
-						{{ zero }}
-					</button>
-
-					<button
-						class="calc__zeros__one"
-						type="button">
-						{{ zero }}
-					</button>
-				</div>
-			</div>
-		</div>
-
-		<div class="calc__operations">
-			<div class="calc__operators">
-				<button
-					v-for="op in operators"
-					:key="op.operation"
-					:class="op.style"
-					class="calc__button"
-					type="button">
-					{{ op.operation }}
-				</button>
-			</div>
-
-			<div class="calc__special-operators">
-				<button
-					v-for="op in specialOperators"
-					:key="op.operation"
-					:class="op.style"
-					class="calc__button"
-					type="button">
-					{{ op.operation }}
-				</button>
-			</div>
-
-			<div class="calc__others">
-				<button
-					v-for="op in others"
-					:key="op.operation"
-					:class="addingSpecificClassToButton(op)"
-					class="calc__button"
-					type="button">
-					{{ op.operation }}
-				</button>
-			</div>
-		</div>
+		<OperatorsButtons :handleEnteringOperation="handleOperation" />
 	</div>
 </template>
 
-<style scoped lang="sass">
+<style lang="sass">
 @use "./styles/_variables" as *
 @use "./styles/_mixins" as *
-
-.calc
-    &__operations
-        padding: 0.8rem
-        display: grid
-        grid-template-columns: repeat(3, 1fr)
-        gap: 0.4rem
-        & button
-            width: 90%
-            height: 70%
-            margin: 1rem 0
-    &__operators, &__special-operators, &__others
-        display: grid
-        grid-template-columns: repeat(2, 1fr)
-        justify-items: center
-        align-items: center
-        column-gap: 0.4rem
-        row-gap: 0
-
-
-.gray
-    background: $btn-operators-gray
-    &-green
-        color: $operators-color
-    &-white
-        color: $main-text-color
-    &-red
-        color: hsl(0, 100%, 65%)
-
-.green-white
-    background: $btn-operators-green
-    color: $main-text-color
-    &--2
-        grid-area: 1 / 2 / 3 / 3
-
-.calc
-    &__numbers
-        @include dFlex()
-        & button
-            background-color: $btn-numbers
-            color: $main-text-color
-            font-size: 0.85em
-
-        &__ctn
-            width: 90%
-            margin: 1.2rem 1rem
-            display: grid
-            grid-template-columns: 3fr 0.8425fr
-            gap: 1.4rem
-
-    &__list
-        display: grid
-        grid-template-columns: repeat(3, 1fr)
-        grid-template-rows: repeat(3, 1fr)
-        gap: 1.4rem
-
-    &__zeros
-        display: grid
-        grid-template-columns: 1fr
-        grid-template-rows: repeat(3, 1fr)
-        gap: 1.4rem
 
 .calc__bg
     margin: 1rem auto
@@ -231,85 +135,6 @@ function addingSpecificClassToButton(operator: Operation): string {
     width: 100%
     background-color: $calc-main-screen-bg-color
     border-radius: 0.8rem
-
-.calc
-    &__screen
-        @include dFlex($dir: column, $ai: flex-end, $g: 1.6rem)
-        &__main
-            width: 88%
-            min-height: 8.5rem
-            max-height: 13vh
-            height: 11vh
-            margin-top: 1rem
-            margin-right: 1rem
-            @include dFlex($jc: flex-end, $ai: center, $g: 0)
-            border-radius: 0.6rem
-            background-color: $calc-result-bg-color
-        &__result
-            margin: 1rem
-            text-align: right
-            letter-spacing: 0.3rem
-            font-size: 1.5em
-        &__second
-            width: 58%
-            min-height: 6.5rem
-            max-height: 8vh
-            height: 100%
-            overflow-y: auto
-            margin-right: 1rem
-            margin-bottom: 1rem
-            border-radius: 0.6rem
-            background-color: $calc-result-bg-color
-        &__list
-            height: 100%
-            margin: 0.8rem 1rem
-            font-size: 0.65em
-            text-align: right
-
-    @media (min-width: $sm)
-        &__screen
-            &__main
-                width: 90%
-                max-height: 16vh
-                height: 15vh
-                margin-top: 2rem
-                margin-right: 2rem
-            &__result
-                font-size: 2em
-            &__second
-                width: 62%
-                max-height: 12vh
-                height: 12vh
-                margin-bottom: 2rem
-                margin-right: 2rem
-            &__list
-                margin-right: 1rem
-                font-size: 0.8em
-
-    @media (min-width: $md)
-        &__screen
-            &__main
-                width: 92%
-                max-height: 18vh
-                height: 18vh
-            &__result
-                margin-right: 2rem
-                font-size: 2.2em
-            &__second
-                width: 69%
-                max-height: 14vh
-                height: 14vh
-            &__list
-                margin-right: 2rem
-                font-size: 0.8em
-
-    @media (min-width: $lg)
-        &__screen
-            &__result
-                font-size: 2.4em
-            &__list
-                font-size: 0.85em
-
 
 .bdr
     &-r
