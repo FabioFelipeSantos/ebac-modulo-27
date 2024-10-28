@@ -1,17 +1,26 @@
 <script setup lang="ts">
 interface Props {
-	result: string[];
-	list: string[];
-	handleListClick(value: string): void;
+	valueToBeCalculated: string[];
+	finalResult: string;
+	list: string[][];
+	handleListClick(value: string[]): void;
 }
 
 const props = defineProps<Props>();
+
+function toBeShowedOnScreen(): string {
+	if (props.finalResult === "") {
+		return props.valueToBeCalculated.join(" ");
+	} else {
+		return props.finalResult;
+	}
+}
 
 function handleListSelection(event: MouseEvent) {
 	if (event.target) {
 		const target = event.target as HTMLUListElement;
 		const text = target.textContent as string;
-		props.handleListClick(text);
+		props.handleListClick(text.split(" "));
 	}
 }
 </script>
@@ -20,22 +29,22 @@ function handleListSelection(event: MouseEvent) {
 	<div class="calc__screen">
 		<div class="calc__screen__main">
 			<div
-				v-if="!props.result.join(' ')"
+				v-if="!toBeShowedOnScreen()"
 				class="bar"></div>
 			<div
 				v-else
 				class="calc__screen__result">
-				{{ props.result.join(" ") }}
+				{{ toBeShowedOnScreen() }}
 			</div>
 		</div>
-		<div class="calc__screen__second bdr-b">
+		<div class="calc__screen__second">
 			<ul class="calc__screen__list">
 				<li
-					@click="handleListSelection"
+					@click="event => handleListSelection(event)"
 					class="calc__screen__list__item"
 					v-for="item in props.list"
-					:key="item">
-					{{ item }}
+					:key="item.join(' ')">
+					{{ item.join(" ") }}
 				</li>
 			</ul>
 		</div>
@@ -61,12 +70,14 @@ function handleListSelection(event: MouseEvent) {
             border-radius: 0.6rem
             background-color: $calc-result-bg-color
         &__result
+            overflow-x: auto
+            white-space: nowrap
             margin: 1rem 2rem
             text-align: right
             letter-spacing: 0.3rem
             font-size: 1.2em
         &__second
-            width: 58%
+            position: relative
             min-height: 6.5rem
             max-height: 8vh
             height: 100%
@@ -76,15 +87,21 @@ function handleListSelection(event: MouseEvent) {
             border-radius: 0.6rem
             background-color: $calc-result-bg-color
         &__list
+            position: absolute
+            top: 0
+            right: 0
+            width: 90%
             height: 100%
             margin: 0.8rem 1rem
             font-size: 0.55em
-            @include dFlex($jc: flex-end)
+            @include dFlex($dir: column, $jc: flex-start, $ai: flex-end, $w: nowrap)
+
 
             &__item
+                overflow-x: hidden
                 text-align: right
-                width: 65%
-                padding: 0.6rem
+                width: 100%
+                padding: 0.35rem
                 border-radius: 0.6rem
                 transition: background-color 0.2s ease-out, cursor 0.2s ease-out
                 &:hover

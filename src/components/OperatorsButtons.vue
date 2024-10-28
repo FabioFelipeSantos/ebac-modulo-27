@@ -24,14 +24,6 @@ const operators: Operation[] = [
 ];
 const specialOperators: Operation[] = [
 	{
-		operation: "%",
-		style: "gray gray-green",
-	},
-	{
-		operation: "()",
-		style: "gray gray-green",
-	},
-	{
 		operation: "C",
 		style: "gray gray-red",
 	},
@@ -39,7 +31,19 @@ const specialOperators: Operation[] = [
 		operation: "CE",
 		style: "gray gray-red",
 	},
+	{
+		operation: "%",
+		style: "gray gray-green",
+	},
 ];
+const openParenthesis = {
+	operation: "(",
+	style: "gray gray-green",
+};
+const closeParenthesis = {
+	operation: ")",
+	style: "gray gray-green",
+};
 const others: Operation[] = [
 	{
 		operation: ",",
@@ -74,6 +78,7 @@ function addingSpecificClassToButton(operator: Operation): string {
 
 interface Props {
 	handleEnteringOperation(operation: string): void;
+	finalResult: string;
 }
 
 const props = defineProps<Props>();
@@ -111,6 +116,22 @@ function handleClick(event: MouseEvent) {
 				type="button">
 				{{ op.operation }}
 			</button>
+			<div class="calc__special-operators__parenthesis">
+				<button
+					@click="event => handleClick(event)"
+					:class="openParenthesis.style"
+					class="calc__button"
+					type="button">
+					{{ openParenthesis.operation }}
+				</button>
+				<button
+					@click="event => handleClick(event)"
+					:class="closeParenthesis.style"
+					class="calc__button"
+					type="button">
+					{{ closeParenthesis.operation }}
+				</button>
+			</div>
 		</div>
 
 		<div class="calc__others">
@@ -119,6 +140,7 @@ function handleClick(event: MouseEvent) {
 				v-for="op in others"
 				:key="op.operation"
 				:class="addingSpecificClassToButton(op)"
+				:disabled="op.operation === '=' && props.finalResult !== ''"
 				class="calc__button"
 				type="button">
 				{{ op.operation }}
@@ -130,6 +152,7 @@ function handleClick(event: MouseEvent) {
 <style lang="sass" scoped>
 @use "./../styles/_variables" as *
 @use "./../styles/_mixins" as *
+@use "sass:color"
 
 .calc
     &__operations
@@ -148,6 +171,14 @@ function handleClick(event: MouseEvent) {
         align-items: center
         column-gap: 0.4rem
         row-gap: 0
+    &__special-operators__parenthesis
+        width: 100%
+        height: 100%
+        display: grid
+        grid-template-columns: repeat(2, 1fr)
+        justify-items: center
+        align-items: center
+
 
 .calc__operators > button
     font-size: 0.8em
@@ -166,4 +197,9 @@ function handleClick(event: MouseEvent) {
     color: $main-text-color
     &--2
         grid-area: 1 / 2 / 3 / 3
+
+button[disabled]
+    opacity: 0.2
+    &:hover
+        cursor: default
 </style>
